@@ -11,28 +11,38 @@ on:
  
 jobs:
   test:
-    runs-on: ubuntu-latest  # a fresh Linux virtual machine from GitHub
+    # The job name shows the Python version, for example: test (Python 3.12)
+    name: test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    # Matrix: run this job once for each Python version, at the same time
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
     steps:
-      # Download the repository code onto the runner
       - name: Check out the code
         uses: actions/checkout@v5
  
-      # Install Python on the runner
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
+          cache: pip        # keep downloaded packages between runs
  
-      # Install pytest, pytest-cov, and ruff from requirements.txt
       - name: Install the dependencies
         run: pip install -r requirements.txt
  
-      # Stage 1 from Lab 6: lint
       - name: Lint with ruff
         run: ruff check .
  
-      # Stage 2 from Lab 6: tests with an 80% coverage gate
+      # The minimum coverage now comes from the repository variable COVERAGE_MIN
       - name: Run the tests with a coverage gate
         run: |
           python -m pytest -v --cov=app --cov-report=term-missing \
-            --cov-fail-under=80
+            --cov-fail-under=${{ vars.COVERAGE_MIN }}
+ 
+      # A secret is passed to a step as an environment variable
+      # GitHub hides its value in the log; never print a real secret
+      - name: Show how GitHub protects a secret
+        env:
+          DEMO_TOKEN: ${{ secrets.DEMO_TOKEN }}
+        run: echo "The token has ${#DEMO_TOKEN} characters and is $DEMO_TOKEN"
