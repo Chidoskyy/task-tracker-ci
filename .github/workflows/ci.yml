@@ -46,3 +46,64 @@ jobs:
         env:
           DEMO_TOKEN: ${{ secrets.DEMO_TOKEN }}
         run: echo "The token has ${#DEMO_TOKEN} characters and is $DEMO_TOKEN"
+ 
+  package:
+    needs: test             # runs only if every test job passed
+    runs-on: ubuntu-latest
+    # Make the artifact name available to later jobs
+    outputs:
+      artifact: ${{ steps.build.outputs.artifact }}
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v5
+ 
+      # Stage 3 from Lab 6: build the versioned artifact once
+      - name: Build the artifact and its checksum
+        id: build
+        run: |
+          VERSION=$(sed -n 's/^VERSION = "\(.*\)"$/\1/p' app.py)
+          ARTIFACT="task-tracker-${VERSION}-${GITHUB_SHA::7}.tar.gz"
+          mkdir -p dist
+          tar -czf "dist/$ARTIFACT" app.py
+          (cd dist && sha256sum "$ARTIFACT" > "$ARTIFACT.sha256")
+          ls -l dist
+          echo "artifact=$ARTIFACT" >> "$GITHUB_OUTPUT"
+ 
+      # Stage 4: store the artifact with this workflow run
+      - name: Upload the artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: task-tracker
+          path: dist/
+          retention-days: 7
+ 
+  smoke-test:
+    needs: package          # runs only if the package job passed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+ 
+      # Download the exact artifact that the package job built
+      - name: Download the artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: task-tracker
+          path: dist
+ 
+      # Stage 5 from Lab 6: check, run, and smoke test the artifact
+      - name: Check, run, and smoke test the artifact
+        env:
+          ARTIFACT: ${{ needs.package.outputs.artifact }}
+        run: |
+          cd dist
+          sha256sum -c "$ARTIFACT.sha256"
+          tar -xzf "$ARTIFACT"
+          python app.py &
+          sleep 2
+          curl -s localhost:8080/health
+          echo
+          curl -s localhost:8080/health | grep -q '"status": "ok"'
+          echo "Smoke test passed: $ARTIFACT is a release candidate"
