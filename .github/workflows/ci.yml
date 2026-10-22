@@ -1,0 +1,38 @@
+# ci.yml: the continuous integration workflow for Task Tracker
+name: CI
+ 
+# Triggers: when the workflow runs
+on:
+  push:
+    branches: [main]        # every push to main
+  pull_request:
+    branches: [main]        # every pull request that targets main
+  workflow_dispatch:        # a Run workflow button on the Actions tab
+ 
+jobs:
+  test:
+    runs-on: ubuntu-latest  # a fresh Linux virtual machine from GitHub
+    steps:
+      # Download the repository code onto the runner
+      - name: Check out the code
+        uses: actions/checkout@v5
+ 
+      # Install Python on the runner
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+ 
+      # Install pytest, pytest-cov, and ruff from requirements.txt
+      - name: Install the dependencies
+        run: pip install -r requirements.txt
+ 
+      # Stage 1 from Lab 6: lint
+      - name: Lint with ruff
+        run: ruff check .
+ 
+      # Stage 2 from Lab 6: tests with an 80% coverage gate
+      - name: Run the tests with a coverage gate
+        run: |
+          python -m pytest -v --cov=app --cov-report=term-missing \
+            --cov-fail-under=80
