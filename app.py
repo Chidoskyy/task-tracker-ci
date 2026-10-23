@@ -18,6 +18,15 @@ def render_page(tasks):  # builds the HTML home page
     return f"<h1>Task Tracker</h1><p>Version {VERSION}</p><ul>{items}</ul>"
  
  
+def summary(tasks):  # new feature: describes how many tasks there are
+    """Return a one-line summary of the task list."""
+    if not tasks:  # the list is empty
+        return "No tasks"
+    if len(tasks) == 1:  # exactly one task, so use the singular word
+        return "1 task"
+    return f"{len(tasks)} tasks"  # two or more tasks
+ 
+ 
 class Handler(BaseHTTPRequestHandler):  # decides how to answer each web request
     def do_GET(self):  # runs every time a browser or curl asks for a page
         if self.path == "/health":  # the request is for the health check
