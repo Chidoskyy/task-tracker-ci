@@ -1,0 +1,25 @@
+# buildspec.yml: build and test instructions for AWS CodeBuild
+version: 0.2
+ 
+phases:
+  # Choose the Python version and install the tools
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      - pip install -r requirements.txt
+  # Lint before the build
+  pre_build:
+    commands:
+      - ruff check .
+  # Run the tests with the 80% coverage gate
+  build:
+    commands:
+      - pytest -v --cov=app --cov-report=term-missing --cov-fail-under=80
+ 
+# The files that CodeDeploy needs, passed to the Deploy stage
+artifacts:
+  files:
+    - app.py
+    - appspec.yml
+    - scripts/*

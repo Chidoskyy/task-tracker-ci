@@ -1,0 +1,24 @@
+# appspec.yml: deployment instructions for AWS CodeDeploy
+version: 0.0
+os: linux
+ 
+# Copy app.py to this folder on the server
+files:
+  - source: app.py
+    destination: /opt/task-tracker
+file_exists_behavior: OVERWRITE
+ 
+# Scripts that run at each lifecycle event of the deployment
+hooks:
+  ApplicationStop:
+    - location: scripts/stop.sh
+      timeout: 30
+      runas: root
+  ApplicationStart:
+    - location: scripts/start.sh
+      timeout: 30
+      runas: root
+  ValidateService:
+    - location: scripts/validate.sh
+      timeout: 60
+      runas: root
