@@ -2,7 +2,7 @@
 import json  # converts Python data into JSON text for the /health page
 from http.server import BaseHTTPRequestHandler, HTTPServer  # built-in web server
  
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 PORT = 8080  # the network port the web server listens on
 TASKS = ["Set a budget alert", "Launch an EC2 instance", "Deploy Task Tracker"]
  
