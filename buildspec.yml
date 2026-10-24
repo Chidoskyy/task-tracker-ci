@@ -15,7 +15,7 @@ phases:
   # Run the tests with the 80% coverage gate
   build:
     commands:
-      - pytest -v --cov=app --cov-report=term-missing --cov-fail-under=80
+      - python -m pytest -v --cov=app --cov-report=term-missing --cov-fail-under=80
  
 # The files that CodeDeploy needs, passed to the Deploy stage
 artifacts:
